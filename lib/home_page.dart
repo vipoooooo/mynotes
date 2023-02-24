@@ -3,62 +3,36 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:mynotes/firebase_options.dart';
 import 'package:mynotes/login_view.dart';
+import 'package:mynotes/verify_email_view.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        title: const Text("Home"),
+    return FutureBuilder(
+      future: Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
       ),
-      body: FutureBuilder(
-        future: Firebase.initializeApp(
-          options: DefaultFirebaseOptions.currentPlatform,
-        ),
-        builder: (context, snapshot) {
-          switch (snapshot.connectionState) {
-            case ConnectionState.done:
-              return LoginView();
-
-            default:
-              return const Text("Loading...");
-          }
-        },
-      ),
-    );
-  }
-}
-
-class VerifyEmailView extends StatefulWidget {
-  const VerifyEmailView({super.key});
-
-  @override
-  State<VerifyEmailView> createState() => _VerifyEmailViewState();
-}
-
-class _VerifyEmailViewState extends State<VerifyEmailView> {
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text("Please verify your email address"),
-        TextButton(
-          onPressed: () async {
+      builder: (context, snapshot) {
+        switch (snapshot.connectionState) {
+          case ConnectionState.done:
             final user = FirebaseAuth.instance.currentUser;
-            await user?.sendEmailVerification();
-          },
-          style: ButtonStyle(
-              foregroundColor:
-                  MaterialStateColor.resolveWith((states) => Colors.white),
-              backgroundColor: MaterialStateColor.resolveWith(
-                  (states) => Theme.of(context).primaryColor)),
-          child: const Text("Send email verification"),
-        )
-      ],
+            if (user != null) {
+              if (user.emailVerified) {
+                print("email verified");
+              } else {
+                return const VerifyEmailView();
+              }
+            } else {
+              return const LoginView();
+            }
+            return const Text("done");
+
+          default:
+            return const CircularProgressIndicator();
+        }
+      },
     );
   }
 }
